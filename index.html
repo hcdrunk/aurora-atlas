@@ -43,12 +43,57 @@ body.edit-mode .del-btn{display:block;}
 <script>
 let ITEMS = JSON.parse(document.getElementById('atlasData').textContent);
 let currentFilter = 'all';
+let sortMode = 'date';
 const groups = [{key:'all',label:'Все'},{key:'low',label:'Kp 0–2'},{key:'3',label:'Kp 3'},{key:'4',label:'Kp 4'},{key:'5',label:'Kp 5'},{key:'6',label:'Kp 6'},{key:'7',label:'Kp 7+'}];
-function toggleEdit(){document.body.classList.toggle('edit-mode');const e=document.body.classList.contains('edit-mode');document.getElementById('modBtn').textContent=e?'Выйти из чистки':'Режим чистки';document.getElementById('saveBtn').style.display=e?'inline-block':'none';}
-function removeItem(id){ITEMS=ITEMS.filter(x=>x.id!==id);render(currentFilter);}
-function exportCleanHtml(){const c=document.documentElement.cloneNode(true);c.querySelector('body').classList.remove('edit-mode');const ab=c.querySelector('#adminBar');if(ab)ab.remove();c.querySelector('#atlasData').textContent=JSON.stringify(ITEMS);const b=new Blob(['<!DOCTYPE html>\n'+c.outerHTML],{type:'text/html;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='index.html';a.click();}
 function matchGroup(it,k){if(k==='all')return true;if(k==='low')return it.kp<2.5;if(k==='7')return it.kp>=6.5;return Math.round(it.kp)===parseInt(k);}
-function render(k){currentFilter=k;const fd=document.getElementById('filters');fd.innerHTML='';groups.forEach(g=>{const cnt=ITEMS.filter(x=>matchGroup(x,g.key)).length;const b=document.createElement('button');b.className='btn'+(g.key===k?' active':'');b.textContent=g.label+' ('+cnt+')';b.onclick=()=>render(g.key);fd.appendChild(b);});const gr=document.getElementById('grid');gr.innerHTML='';ITEMS.filter(x=>matchGroup(x,k)).forEach(it=>{const card=document.createElement('div');card.className='card';const hc=it.kp>=5.5?' kp-high':'';const db=document.createElement('button');db.className='del-btn';db.textContent='✕ Удалить';db.onclick=()=>removeItem(it.id);const im=document.createElement('img');im.src=it.photo;im.onclick=()=>{document.getElementById('mimg').src=it.photo;document.getElementById('modal').style.display='flex';};const bd=document.createElement('div');bd.className='body';bd.innerHTML='<div class="top-meta"><span class="kp-badge'+hc+'">Kp '+it.kp+'</span><span class="date">'+it.date+'</span></div>';const tx=document.createElement('div');tx.className='txt';tx.textContent=it.text;bd.appendChild(tx);card.appendChild(db);card.appendChild(im);card.appendChild(bd);gr.appendChild(card);});}
+function setSort(m){sortMode=m;render(currentFilter);}
+function render(k){
+  currentFilter=k;
+  const fd=document.getElementById('filters');
+  fd.innerHTML='';
+  groups.forEach(g=>{
+    const cnt=ITEMS.filter(x=>matchGroup(x,g.key)).length;
+    const b=document.createElement('button');
+    b.className='btn'+(g.key===k?' active':'');
+    b.textContent=g.label+' ('+cnt+')';
+    b.onclick=()=>render(g.key);
+    fd.appendChild(b);
+  });
+  const sep=document.createElement('span');
+  sep.style.marginLeft='auto';
+  fd.appendChild(sep);
+  [{id:'date',lbl:'По дате'},{id:'kp_desc',lbl:'Kp ↓'},{id:'kp_asc',lbl:'Kp ↑'}].forEach(s=>{
+    const sb=document.createElement('button');
+    sb.className='btn'+(sortMode===s.id?' active':'');
+    sb.style.borderColor='#38bdf8';
+    sb.textContent=s.lbl;
+    sb.onclick=()=>setSort(s.id);
+    fd.appendChild(sb);
+  });
+  let list=ITEMS.filter(x=>matchGroup(x,k)).slice();
+  if(sortMode==='kp_desc')list.sort((a,b)=>b.kp-a.kp);
+  else if(sortMode==='kp_asc')list.sort((a,b)=>a.kp-b.kp);
+  const gr=document.getElementById('grid');
+  gr.innerHTML='';
+  list.forEach(it=>{
+    const card=document.createElement('div');
+    card.className='card';
+    const hc=it.kp>=5.5?' kp-high':'';
+    const im=document.createElement('img');
+    im.src=it.photo;
+    im.onclick=()=>{document.getElementById('mimg').src=it.photo;document.getElementById('modal').style.display='flex';};
+    const bd=document.createElement('div');
+    bd.className='body';
+    bd.innerHTML='<div class="top-meta"><span class="kp-badge'+hc+'">Kp '+it.kp+'</span><span class="date">'+it.date+'</span></div>';
+    const tx=document.createElement('div');
+    tx.className='txt';
+    tx.textContent=it.text;
+    bd.appendChild(tx);
+    card.appendChild(im);
+    card.appendChild(bd);
+    gr.appendChild(card);
+  });
+}
 render('all');
 </script>
-<g-ext-in></g-ext-in></body></html>
+</body></html>

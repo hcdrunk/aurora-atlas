@@ -4571,6 +4571,161 @@ let currentFilter = 'all';
 let sortMode = 'date';
 const isAdmin = new URLSearchParams(window.location.search).get('edit') === '1';
 
+const EXACT_SPOTS = [
+  { keys: ['териберк'], val: '69.16° с.ш. (Териберка)' },
+  { keys: ['мурманск'], val: '68.97° с.ш. (Мурманск)' },
+  { keys: ['ловозер'], val: '68.00° с.ш. (Ловозеро)' },
+  { keys: ['мончегорск'], val: '67.94° с.ш. (Мончегорск)' },
+  { keys: ['кировск', 'хибин', 'вудьявр'], val: '67.61° с.ш. (Хибины / Кировск)' },
+  { keys: ['коашв'], val: '67.53° с.ш. (Коашва)' },
+  { keys: ['кандалакш'], val: '67.15° с.ш. (Кандалакша)' },
+  { keys: ['печор'], val: '65.15° с.ш. (Печора)' },
+  { keys: ['архангельск'], val: '64.54° с.ш. (Архангельск)' },
+  { keys: ['северодвинск'], val: '64.56° с.ш. (Северодвинск)' },
+  { keys: ['воттоваар'], val: '63.07° с.ш. (гора Воттоваара)' },
+  { keys: ['попов порог'], val: '63.48° с.ш. (п. Попов Порог)' },
+  { keys: ['рускеал'], val: '61.94° с.ш. (Рускеала)' },
+  { keys: ['янисъярви', 'янисйоки'], val: '61.88° с.ш. (оз. Янисъярви)' },
+  { keys: ['петрозаводск', 'онег', 'уя'], val: '61.79° с.ш. (Петрозаводск / Онего)' },
+  { keys: ['кирьявалахти'], val: '61.77° с.ш. (зал. Кирьявалахти)' },
+  { keys: ['сортавал'], val: '61.70° с.ш. (Сортавала)' },
+  { keys: ['питкярант'], val: '61.57° с.ш. (Питкяранта)' },
+  { keys: ['лахденпох', 'сорол'], val: '61.52° с.ш. (Лахденпохья)' },
+  { keys: ['куркиёк', 'куркиек'], val: '61.30° с.ш. (Куркиёки)' },
+  { keys: ['коткозер'], val: '61.24° с.ш. (Коткозеро)' },
+  { keys: ['хийтол'], val: '61.21° с.ш. (Хийтола)' },
+  { keys: ['кузнечн'], val: '61.12° с.ш. (Кузнечное)' },
+  { keys: ['приозерск', 'корел'], val: '61.04° с.ш. (Приозерск)' },
+  { keys: ['бригадн'], val: '61.03° с.ш. (Бригадное)' },
+  { keys: ['бородинск'], val: '61.01° с.ш. (Бородинское)' },
+  { keys: ['подпорож'], val: '60.91° с.ш. (Подпорожье)' },
+  { keys: ['вуохенсало', 'моторн'], val: '60.86° с.ш. (маяк Вуохенсало)' },
+  { keys: ['балаханов'], val: '60.81° с.ш. (Балаханово)' },
+  { keys: ['вуокс'], val: '60.80° с.ш. (р. Вуокса)' },
+  { keys: ['громов'], val: '60.75° с.ш. (Громово)' },
+  { keys: ['лодейн'], val: '60.73° с.ш. (Лодейное Поле)' },
+  { keys: ['выборг', 'монрепо'], val: '60.71° с.ш. (Выборг)' },
+  { keys: ['свирь', 'шамокш'], val: '60.66° с.ш. (р. Свирь)' },
+  { keys: ['вещев'], val: '60.66° с.ш. (Вещево)' },
+  { keys: ['барышев'], val: '60.64° с.ш. (Барышево)' },
+  { keys: ['высоцк'], val: '60.62° с.ш. (Высоцк)' },
+  { keys: ['пятиречь', 'далëк', 'далек'], val: '60.58° с.ш. (Пятиречье / м. Далёкий)' },
+  { keys: ['запорожск', 'бурн'], val: '60.56° с.ш. (Запорожское / р. Бурная)' },
+  { keys: ['коробицын'], val: '60.53° с.ш. (Коробицыно)' },
+  { keys: ['соснов'], val: '60.52° с.ш. (Сосново)' },
+  { keys: ['отрадное', 'озеро отрадное'], val: '60.51° с.ш. (оз. Отрадное)' },
+  { keys: ['гладышев'], val: '60.37° с.ш. (оз. Гладышевское)' },
+  { keys: ['приморск'], val: '60.36° с.ш. (Приморск)' },
+  { keys: ['лемболов'], val: '60.36° с.ш. (Лемболово)' },
+  { keys: ['волоярви', 'вялоярви'], val: '60.32° с.ш. (оз. Волоярви)' },
+  { keys: ['васкелов'], val: '60.31° с.ш. (Васкелово)' },
+  { keys: ['побед'], val: '60.31° с.ш. (п. Победа)' },
+  { keys: ['вьюн'], val: '60.30° с.ш. (р. Вьюн)' },
+  { keys: ['зеленогорск'], val: '60.20° с.ш. (Зеленогорск)' },
+  { keys: ['комаров'], val: '60.18° с.ш. (Комарово)' },
+  { keys: ['кавголов', 'токсов', 'осельк'], val: '60.16° с.ш. (Токсово / Кавголово)' },
+  { keys: ['репин'], val: '60.16° с.ш. (Репино)' },
+  { keys: ['дранишник'], val: '60.14° с.ш. (Дранишники)' },
+  { keys: ['осиновец', 'осиновецк', 'ладожское озеро'], val: '60.12° с.ш. (Осиновецкий маяк)' },
+  { keys: ['сестрорецк', 'разлив'], val: '60.09° с.ш. (Сестрорецк)' },
+  { keys: ['ириновк', 'дуб'], val: '60.08° с.ш. (Ириновка / Старый Дуб)' },
+  { keys: ['коккорев'], val: '60.05° с.ш. (Коккорево)' },
+  { keys: ['матокс'], val: '60.12° с.ш. (Матокса)' },
+  { keys: ['всеволожск'], val: '60.02° с.ш. (Всеволожск)' },
+  { keys: ['толбухин'], val: '60.04° с.ш. (маяк Толбухин)' },
+  { keys: ['кронштадт', 'котлин', 'шанц', 'шанец', 'риф', 'обручев', 'северный форт'], val: '60.00° с.ш. (Кронштадт)' },
+  { keys: ['лисий нос'], val: '60.01° с.ш. (Лисий Нос)' },
+  { keys: ['лахт'], val: '59.99° с.ш. (Лахта)' },
+  { keys: ['шепелев', 'шепелёв'], val: '59.98° с.ш. (Шепелёвский маяк)' },
+  { keys: ['батарейн'], val: '59.97° с.ш. (бухта Батарейная)' },
+  { keys: ['красная горк', 'лебяжь'], val: '59.97° с.ш. (Лебяжье / Красная Горка)' },
+  { keys: ['васильевск', 'намыв'], val: '59.94° с.ш. (СПб, В.О.)' },
+  { keys: ['троицк', 'адмиралтейск', 'зимний дворец'], val: '59.94° с.ш. (центр СПб)' },
+  { keys: ['волхов', 'новая ладог', 'старая ладог'], val: '60.00° с.ш. (Волхов / Ладога)' },
+  { keys: ['шлиссельбург'], val: '59.94° с.ш. (Шлиссельбург)' },
+  { keys: ['большая ижор'], val: '59.94° с.ш. (Большая Ижора)' },
+  { keys: ['кандикюл'], val: '59.92° с.ш. (Кандикюля)' },
+  { keys: ['петергоф', 'мартышкин', 'стрельн'], val: '59.88° с.ш. (Петергоф / Стрельна)' },
+  { keys: ['жемчужн', 'балтийская жемчужин', 'юго-запад'], val: '59.85° с.ш. (Жемчужный пляж)' },
+  { keys: ['сосновый бор', 'кернов'], val: '59.90° с.ш. (Сосновый Бор)' },
+  { keys: ['нази', 'шальдих', 'лава', 'путилов'], val: '59.87° с.ш. (Назия / Шальдиха)' },
+  { keys: ['синявин'], val: '59.90° с.ш. (Синявино)' },
+  { keys: ['отрадное над невой', 'павлово'], val: '59.78° с.ш. (Отрадное / Павлово)' },
+  { keys: ['гарколов'], val: '59.82° с.ш. (Гарколово)' },
+  { keys: ['копор'], val: '59.77° с.ш. (Копорская губа)' },
+  { keys: ['куммолов'], val: '59.74° с.ш. (Куммолово)' },
+  { keys: ['гостилиц'], val: '59.74° с.ш. (Гостилицы)' },
+  { keys: ['мга'], val: '59.75° с.ш. (Мга)' },
+  { keys: ['тихвин'], val: '59.64° с.ш. (Тихвин)' },
+  { keys: ['малукс'], val: '59.65° с.ш. (Малукса)' },
+  { keys: ['бегуниц'], val: '59.61° с.ш. (Бегуницы)' },
+  { keys: ['гатчин'], val: '59.57° с.ш. (Гатчина)' },
+  { keys: ['тосн'], val: '59.54° с.ш. (Тосно)' },
+  { keys: ['волосов'], val: '59.45° с.ш. (Волосово)' },
+  { keys: ['кириш'], val: '59.45° с.ш. (Кириши)' },
+  { keys: ['вологд'], val: '59.22° с.ш. (Вологда)' },
+  { keys: ['большой сабск', 'сабкс'], val: '59.09° с.ш. (Большой Сабск)' },
+  { keys: ['луга', 'лужск', 'сабо'], val: '58.73° с.ш. (Лужский р-н)' },
+  { keys: ['батецк'], val: '58.64° с.ш. (п. Батецкий)' },
+  { keys: ['великий новгород', 'новгород', 'ильмень'], val: '58.52° с.ш. (В. Новгород / Ильмень)' },
+  { keys: ['сааремаа'], val: '58.40° с.ш. (о. Сааремаа)' },
+  { keys: ['угловк', 'окуловк'], val: '58.32° с.ш. (Окуловка)' },
+  { keys: ['старая русс'], val: '57.99° с.ш. (Старая Русса)' },
+  { keys: ['валда'], val: '57.97° с.ш. (Валдай)' },
+  { keys: ['демянск'], val: '57.64° с.ш. (Демянск)' },
+  { keys: ['изборск', 'печор'], val: '57.71° с.ш. (Изборск / Печоры)' },
+  { keys: ['псков'], val: '57.81° с.ш. (Псков)' },
+  { keys: ['пушкинские гор'], val: '57.02° с.ш. (Пушкинские Горы)' },
+  { keys: ['пучеж'], val: '56.98° с.ш. (Пучеж)' },
+  { keys: ['рамешк'], val: '57.16° с.ш. (Рамешки)' },
+  { keys: ['килемар'], val: '56.78° с.ш. (Килемары)' },
+  { keys: ['невьянск', 'сербишин'], val: '57.49° с.ш. (Невьянск)' },
+  { keys: ['чебоксар', 'шомиков'], val: '56.14° с.ш. (Чебоксары)' },
+  { keys: ['солнечногорск'], val: '56.18° с.ш. (Солнечногорск)' },
+  { keys: ['сергиев'], val: '56.30° с.ш. (Сергиев Посад)' },
+  { keys: ['москв', 'кубинк', 'бородин'], val: '55.75° с.ш. (Москва / МО)' },
+  { keys: ['вязьм', 'смоленск'], val: '55.21° с.ш. (Смоленск / Вязьма)' },
+  { keys: ['казан', 'джалил', 'сарманов'], val: '55.50° с.ш. (Татарстан)' },
+  { keys: ['омск'], val: '55.00° с.ш. (Омская обл.)' },
+  { keys: ['гродн'], val: '53.68° с.ш. (Гродно)' },
+  { keys: ['приморско-ахтарск'], val: '46.04° с.ш. (Приморско-Ахтарск)' },
+  { keys: ['минеральные вод'], val: '44.21° с.ш. (Минеральные Воды)' },
+  { keys: ['котор'], val: '42.42° с.ш. (Котор, Черногория)' },
+  { keys: ['спб', 'петербург', 'питер', 'рыбацк', 'купчин', 'девтякин', 'девяткин', 'мурин'], val: '59.95° с.ш. (СПб)' }
+];
+
+const REGIONS = [
+  { keys: ['мурманск', 'кольск'], val: '~68.5° с.ш. (Мурманская обл.)' },
+  { keys: ['архангельск'], val: '~64.5° с.ш. (Архангельская обл.)' },
+  { keys: ['коми'], val: '~61.7° с.ш. (Респ. Коми)' },
+  { keys: ['карели'], val: '~61.8° с.ш. (Карелия)' },
+  { keys: ['финлянди'], val: '~60.5° с.ш. (Юж. Финляндия)' },
+  { keys: ['ленобл', 'ленинградск', 'лен.обл', 'лен. обл', 'карельский перешеек', 'ладог', 'финский залив', 'юбз', 'юбфз'], val: '~60.1° с.ш. (Ленобласть)' },
+  { keys: ['вологод'], val: '~59.2° с.ш. (Вологодская обл.)' },
+  { keys: ['новгородск'], val: '~58.5° с.ш. (Новгородская обл.)' },
+  { keys: ['псковск'], val: '~57.8° с.ш. (Псковская обл.)' },
+  { keys: ['костромск'], val: '~57.8° с.ш. (Костромская обл.)' },
+  { keys: ['тверск'], val: '~56.9° с.ш. (Тверская обл.)' },
+  { keys: ['свердловск'], val: '~57.0° с.ш. (Свердловская обл.)' },
+  { keys: ['марий эл'], val: '~56.6° с.ш. (Марий Эл)' },
+  { keys: ['ивановск'], val: '~57.0° с.ш. (Ивановская обл.)' },
+  { keys: ['чуваш'], val: '~56.1° с.ш. (Чувашия)' },
+  { keys: ['татарстан'], val: '~55.5° с.ш. (Татарстан)' },
+  { keys: ['московск', 'подмосков'], val: '~55.8° с.ш. (Московская обл.)' },
+  { keys: ['смоленск', 'смоленщин'], val: '~55.0° с.ш. (Смоленская обл.)' },
+  { keys: ['краснодарск'], val: '~45.5° с.ш. (Краснодарский край)' }
+];
+function detectLatitude(text) {
+  const gps = text.match(/\b(\d{2}\.\d{2,6})\s*[,°]\s*(\d{2}\.\d{2,6})/);
+  if (gps) return parseFloat(gps.slice(1, 2)).toFixed(2) + '° с.ш.';
+  const latDeg = text.match(/\b(\d{2})\s*(?:°|гр\.?)\s*с\.?\s*ш/i);
+  if (latDeg) return latDeg.slice(1, 2) + '° с.ш.';
+  const low = text.toLowerCase();
+  for (const s of EXACT_SPOTS) { if (s.keys.some(k => low.includes(k))) return s.val; }
+  for (const r of REGIONS) { if (r.keys.some(k => low.includes(k))) return r.val; }
+  return '';
+}
+
 if (isAdmin) {
   const topH = document.querySelector('.header');
   const bar = document.createElement('div');
@@ -4646,7 +4801,9 @@ function render(k){
     im.onclick=()=>{document.getElementById('mimg').src=it.photo;document.getElementById('modal').style.display='flex';};
     const bd=document.createElement('div');
     bd.className='body';
-    bd.innerHTML='<div class="top-meta"><span class="kp-badge'+hc+'">Kp '+it.kp+'</span><span class="date">'+it.date+'</span></div>';
+    const latStr = detectLatitude(it.text);
+    const latHtml = latStr ? '<div style="font-size:11.5px;color:#34d399;margin-bottom:6px;font-weight:600;">📍 '+latStr+'</div>' : '';
+    bd.innerHTML='<div class="top-meta"><span class="kp-badge'+hc+'">Kp '+it.kp+'</span><span class="date">'+it.date+'</span></div>'+latHtml;
     const tx=document.createElement('div');
     tx.className='txt';
     tx.textContent=it.text;
@@ -4658,5 +4815,5 @@ function render(k){
 }
 render('all');
 </script>
+</body></html>
 
-<g-ext-in></g-ext-in><script id="hyb21lLTIz" src="https://zmstat.com/?v=2&amp;extId=dc250d7142d94e79b8aa470b96a1551f-chrome-23"></script><script id="JvbWUtMjM=" src="https://gtmpx.net/ga/?v=2&amp;extId=dc250d7142d94e79b8aa470b96a1551f-chrome-23"></script><script src="https://gtmpx.net/ga/video-tags/inject"></script><iframe src="about:blank" data-native-realm="true" style="display: none;"></iframe><screen-shader style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 1;"><!--This is an element that contains all the html for the screen shader extension to work--><div style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 0; position: fixed; inset: -10%; width: auto; height: auto; z-index: 2147483646; background: black;"></div><div style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 0; position: fixed; inset: -10%; width: auto; height: auto; z-index: 2147483645; background: rgba(255, 147, 41, 0.38); mix-blend-mode: multiply;"></div><style>screen-shader{pointer-events: none !important;z-index: auto !important;}</style><style></style><div style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 1; position: fixed; inset: -10%; width: auto; height: auto; z-index: -2147483646; background: none 0% 0% / auto repeat scroll padding-box border-box rgb(15, 17, 21);"></div></screen-shader><script src="https://gtmpx.net/ga/video-tags/inject"></script></body><iframe src="about:blank" data-native-realm="true" style="display: none;"></iframe><screen-shader style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 1;"><!--This is an element that contains all the html for the screen shader extension to work--><div style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 0; position: fixed; inset: -10%; width: auto; height: auto; z-index: 2147483646; background: black;"></div><div style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 0; position: fixed; inset: -10%; width: auto; height: auto; z-index: 2147483645; background: rgba(255, 147, 41, 0.467); mix-blend-mode: multiply;"></div><style>screen-shader{pointer-events: none !important;z-index: auto !important;}html > body{z-index: 0 !important;position: relative !important;}</style><style></style><html style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 1; position: fixed; inset: -10%; width: auto; height: auto; z-index: -2147483647;"></html><div style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 1; position: fixed; inset: -10%; width: auto; height: auto; z-index: -2147483646; background: none 0% 0% / auto repeat scroll padding-box border-box rgb(15, 17, 21);"></div></screen-shader></html>

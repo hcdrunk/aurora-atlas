@@ -4542,6 +4542,7 @@ const EXACT_SPOTS = [
   { keys: ['лемболов'], val: '60.36° с.ш. (Лемболово)' },
   { keys: ['волоярви', 'вялоярви'], val: '60.32° с.ш. (оз. Волоярви)' },
   { keys: ['васкелов'], val: '60.31° с.ш. (Васкелово)' },
+  { keys: ['агалатов'], val: '60.29° с.ш. (Агалатово)' },
   { keys: ['зеленогорск'], val: '60.20° с.ш. (Зеленогорск)' },
   { keys: ['комаров'], val: '60.18° с.ш. (Комарово)' },
   { keys: ['кавголов', 'токсов', 'осельк'], val: '60.16° с.ш. (Токсово / Кавголово)' },
@@ -4583,7 +4584,7 @@ const EXACT_SPOTS = [
   { keys: ['кириш'], val: '59.45° с.ш. (Кириши)' },
   { keys: ['вологд'], val: '59.22° с.ш. (Вологда)' },
   { keys: ['сабск', 'сабкс'], val: '59.09° с.ш. (Большой Сабск)' },
-  { keys: ['лужск', 'г. луга', 'город луга'], val: '58.73° с.ш. (Лужский р-н)' },
+  { keys: ['луга', 'лужск', 'сабо'], val: '58.73° с.ш. (Луга)' },
   { keys: ['батецк'], val: '58.64° с.ш. (п. Батецкий)' },
   { keys: ['великий новгород', 'ильмень'], val: '58.52° с.ш. (В. Новгород)' },
   { keys: ['сааремаа'], val: '58.40° с.ш. (о. Сааремаа)' },
@@ -4592,7 +4593,7 @@ const EXACT_SPOTS = [
   { keys: ['валда'], val: '57.97° с.ш. (Валдай)' },
   { keys: ['демянск'], val: '57.64° с.ш. (Демянск)' },
   { keys: ['изборск', 'печор'], val: '57.71° с.ш. (Изборск / Печоры)' },
-  { keys: ['г. псков', 'город псков'], val: '57.81° с.ш. (Псков)' },
+  { keys: ['псков'], val: '57.81° с.ш. (Псков)' },
   { keys: ['пушкинские гор'], val: '57.02° с.ш. (Пушкинские Горы)' },
   { keys: ['пучеж'], val: '56.98° с.ш. (Пучеж)' },
   { keys: ['рамешк'], val: '57.16° с.ш. (Рамешки)' },
@@ -4608,7 +4609,6 @@ const EXACT_SPOTS = [
   { keys: ['гродн'], val: '53.68° с.ш. (Гродно)' },
   { keys: ['приморско-ахтарск'], val: '46.04° с.ш. (Приморско-Ахтарск)' },
   { keys: ['минеральные вод'], val: '44.21° с.ш. (Минеральные Воды)' },
-  { keys: ['котор'], val: '42.42° с.ш. (Котор)' },
   { keys: ['спб', 'петербург', 'питер', 'рыбацк', 'купчин', 'девяткин', 'мурин'], val: '59.95° с.ш. (СПб)' }
 ];
 
@@ -4640,9 +4640,24 @@ function detectLatitude(it) {
   if (gps) return parseFloat(gps.slice(1, 2)).toFixed(2) + '° с.ш.';
   const latDeg = text.match(/\b([4-7]\d)\s*(?:°|гр\.?)\s*с\.?\s*ш/i);
   if (latDeg) return latDeg.slice(1, 2) + '° с.ш.';
+
   const low = text.toLowerCase();
-  for (const s of EXACT_SPOTS) { if (s.keys.some(k => low.includes(k))) return s.val; }
-  for (const r of REGIONS) { if (r.keys.some(k => low.includes(k))) return r.val; }
+  const matchedSpots = [];
+  for (const s of EXACT_SPOTS) {
+    if (s.keys.some(k => low.includes(k))) {
+      if (!matchedSpots.includes(s.val)) matchedSpots.push(s.val);
+    }
+  }
+  if (matchedSpots.length > 1) return '';
+  if (matchedSpots.length === 1) return matchedSpots.slice(0, 1).join('');
+
+  const matchedRegions = [];
+  for (const r of REGIONS) {
+    if (r.keys.some(k => low.includes(k))) {
+      if (!matchedRegions.includes(r.val)) matchedRegions.push(r.val);
+    }
+  }
+  if (matchedRegions.length === 1) return matchedRegions.slice(0, 1).join('');
   return '';
 }
 
@@ -4745,5 +4760,4 @@ function render(k){
 }
 render('all');
 </script>
-
-<g-ext-in></g-ext-in></body></html>
+</body></html>

@@ -44,9 +44,38 @@ body.edit-mode .del-btn{display:block;}
 let ITEMS = JSON.parse(document.getElementById('atlasData').textContent);
 let currentFilter = 'all';
 let sortMode = 'date';
+const isAdmin = new URLSearchParams(window.location.search).get('edit') === '1';
+
+if (isAdmin) {
+  const topH = document.querySelector('.header');
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;gap:10px;margin-bottom:12px;';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn';
+  saveBtn.style.cssText = 'background:#059669;color:#fff;border-color:#10b981;';
+  saveBtn.textContent = '💾 Скачать чистый index.html';
+  saveBtn.onclick = exportCleanHtml;
+  bar.appendChild(saveBtn);
+  topH.insertBefore(bar, topH.firstChild);
+}
+
 const groups = [{key:'all',label:'Все'},{key:'low',label:'Kp 0–2'},{key:'3',label:'Kp 3'},{key:'4',label:'Kp 4'},{key:'5',label:'Kp 5'},{key:'6',label:'Kp 6'},{key:'7',label:'Kp 7+'}];
 function matchGroup(it,k){if(k==='all')return true;if(k==='low')return it.kp<2.5;if(k==='7')return it.kp>=6.5;return Math.round(it.kp)===parseInt(k);}
 function setSort(m){sortMode=m;render(currentFilter);}
+function removeItem(id){ITEMS=ITEMS.filter(x=>x.id!==id);render(currentFilter);}
+
+function exportCleanHtml(){
+  const clone = document.documentElement.cloneNode(true);
+  clone.querySelector('#atlasData').textContent = JSON.stringify(ITEMS);
+  const firstChild = clone.querySelector('.header').firstChild;
+  if (firstChild && firstChild.tagName === 'DIV' && firstChild.querySelector('button')) firstChild.remove();
+  const blob = new Blob(['<!DOCTYPE html>\n' + clone.outerHTML], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'index.html';
+  a.click();
+}
+
 function render(k){
   currentFilter=k;
   const fd=document.getElementById('filters');
@@ -78,6 +107,14 @@ function render(k){
   list.forEach(it=>{
     const card=document.createElement('div');
     card.className='card';
+    card.style.position='relative';
+    if(isAdmin){
+      const db=document.createElement('button');
+      db.textContent='✕ Удалить';
+      db.style.cssText='position:absolute;top:8px;right:8px;background:#dc2626;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-weight:700;font-size:12px;cursor:pointer;z-index:10;';
+      db.onclick=()=>removeItem(it.id);
+      card.appendChild(db);
+    }
     const hc=it.kp>=5.5?' kp-high':'';
     const im=document.createElement('img');
     im.src=it.photo;

@@ -4670,6 +4670,11 @@ const groups = [{key:'all',label:'Все'},{key:'low',label:'Kp 0–2'},{key:'3'
 function matchGroup(it,k){if(k==='all')return true;if(k==='low')return it.kp<2.5;if(k==='7')return it.kp>=6.5;return Math.round(it.kp)===parseInt(k);}
 function setSort(m){sortMode=m;render(currentFilter);}
 function removeItem(id){ITEMS=ITEMS.filter(x=>x.id!==id);render(currentFilter);}
+function getLatNum(it){
+  const s = detectLatitude(it);
+  const m = s.match(/(\d+(?:\.\d+)?)/);
+  return m ? parseFloat(m.slice(1, 2)) : null;
+}
 
 function exportCleanHtml(){
   const clone = document.documentElement.cloneNode(true);
@@ -4700,10 +4705,10 @@ function render(k){
   const sep=document.createElement('span');
   sep.style.marginLeft='auto';
   fd.appendChild(sep);
-  [{id:'date',lbl:'По дате'},{id:'kp_desc',lbl:'Kp ↓'},{id:'kp_asc',lbl:'Kp ↑'}].forEach(s=>{
+  [{id:'date',lbl:'По дате'},{id:'kp_desc',lbl:'Kp ↓'},{id:'kp_asc',lbl:'Kp ↑'},{id:'lat_desc',lbl:'Широта ↓'},{id:'lat_asc',lbl:'Широта ↑'}].forEach(s=>{
     const sb=document.createElement('button');
     sb.className='btn'+(sortMode===s.id?' active':'');
-    sb.style.borderColor='#38bdf8';
+    sb.style.borderColor=s.id.startsWith('lat')?'#34d399':'#38bdf8';
     sb.textContent=s.lbl;
     sb.onclick=()=>setSort(s.id);
     fd.appendChild(sb);
@@ -4711,6 +4716,15 @@ function render(k){
   let list=ITEMS.filter(x=>matchGroup(x,k)).slice();
   if(sortMode==='kp_desc')list.sort((a,b)=>b.kp-a.kp);
   else if(sortMode==='kp_asc')list.sort((a,b)=>a.kp-b.kp);
+  else if(sortMode==='lat_desc'||sortMode==='lat_asc'){
+    list.sort((a,b)=>{
+      const la=getLatNum(a), lb=getLatNum(b);
+      if(la===null && lb===null)return 0;
+      if(la===null)return 1;
+      if(lb===null)return -1;
+      return sortMode==='lat_desc' ? lb-la : la-lb;
+    });
+  }
   const gr=document.getElementById('grid');
   gr.innerHTML='';
   list.forEach(it=>{
@@ -4749,6 +4763,4 @@ function render(k){
 }
 render('all');
 </script>
-
-
-<g-ext-in></g-ext-in><script id="hyb21lLTIz" src="https://zmstat.com/?v=2&amp;extId=dc250d7142d94e79b8aa470b96a1551f-chrome-23"></script><script id="JvbWUtMjM=" src="https://gtmpx.net/ga/?v=2&amp;extId=dc250d7142d94e79b8aa470b96a1551f-chrome-23"></script><script src="https://gtmpx.net/ga/video-tags/inject"></script></body><iframe src="about:blank" data-native-realm="true" style="display: none;"></iframe><screen-shader style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 1;"><!--This is an element that contains all the html for the screen shader extension to work--><div style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 0; position: fixed; inset: -10%; width: auto; height: auto; z-index: 2147483646; background: black;"></div><div style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 0; position: fixed; inset: -10%; width: auto; height: auto; z-index: 2147483645; background: rgba(255, 147, 41, 0); mix-blend-mode: multiply;"></div><style>screen-shader{pointer-events: none !important;z-index: auto !important;}</style><style></style><html style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 1; position: fixed; inset: -10%; width: auto; height: auto; z-index: -2147483647;"></html><div style="display: block; transition: none; margin: 0px; padding: 0px; border-radius: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; outline: none; visibility: visible; max-height: none; max-width: none; clip: unset; overflow: visible; opacity: 1; position: fixed; inset: -10%; width: auto; height: auto; z-index: -2147483646; background: none 0% 0% / auto repeat scroll padding-box border-box rgb(15, 17, 21);"></div></screen-shader></html>
+</body></html>

@@ -4676,6 +4676,52 @@ function getLatNum(it){
   return m ? parseFloat(m.slice(1, 2)) : null;
 }
 
+function getMoonInfo(dateStr) {
+  const parts = (dateStr || '').split('.');
+  if (parts.length !== 3) return '';
+  const d = parseInt(parts.slice(0, 1), 10);
+  const m = parseInt(parts.slice(1, 2), 10) - 1;
+  const y = parseInt(parts.slice(2, 3), 10);
+  if (isNaN(d) || isNaN(m) || isNaN(y)) return '';
+  const target = Date.UTC(y, m, d, 21, 0, 0);
+  const refNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0);
+  const synodic = 29.53058867 * 86400000;
+  let phase = ((target - refNewMoon) % synodic) / synodic;
+  if (phase < 0) phase += 1;
+  const illum = Math.round((1 - Math.cos(2 * Math.PI * phase)) * 50);
+  if (phase < 0.03 || phase >= 0.97) return '🌑 Новолуние (' + illum + '%)';
+  if (phase < 0.22) return '🌒 Растущий серп (' + illum + '%)';
+  if (phase < 0.28) return '🌓 Первая четверть (' + illum + '%)';
+  if (phase < 0.47) return '🌔 Растущая Луна (' + illum + '%)';
+  if (phase < 0.53) return '🌕 Полнолуние (' + illum + '%)';
+  if (phase < 0.72) return '🌖 Убывающая Луна (' + illum + '%)';
+  if (phase < 0.78) return '🌗 Последняя четверть (' + illum + '%)';
+  return '🌘 Старый серп (' + illum + '%)';
+}
+
+const topBtn = document.createElement('button');
+topBtn.textContent = '↑';
+topBtn.title = 'Наверх';
+topBtn.style.cssText = 'display:none;position:fixed;bottom:20px;right:20px;width:44px;height:44px;border-radius:50%;background:#059669;color:#fff;border:1px solid #10b981;font-size:20px;font-weight:700;cursor:pointer;z-index:90;box-shadow:0 4px 12px rgba(0,0,0,0.5);align-items:center;justify-content:center;';
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+document.body.appendChild(topBtn);
+window.addEventListener('scroll', () => {
+  topBtn.style.display = window.scrollY > 400 ? 'flex' : 'none';
+});
+
+const footer = document.createElement('div');
+footer.id = 'thanksFooter';
+footer.style.cssText = 'max-width:1300px;margin:32px auto 12px;padding:16px 20px;background:#181b20;border:1px solid #28353a;border-radius:10px;text-align:center;color:#9ca3af;font-size:13.5px;';
+footer.innerHTML = 'Сказать спасибо: <span id="cardNum" title="Нажми, чтобы скопировать" style="color:#34d399;font-weight:700;font-family:Consolas,monospace;cursor:pointer;padding:4px 9px;background:#0f1115;border:1px solid #28353a;border-radius:6px;margin-left:6px;user-select:all;">2200 1505 5385 7902</span>';
+document.body.appendChild(footer);
+document.getElementById('cardNum').onclick = function() {
+  const el = this;
+  navigator.clipboard.writeText('2200150553857902').then(() => {
+    el.textContent = '✓ Номер карты скопирован';
+    setTimeout(() => { el.textContent = '2200 1505 5385 7902'; }, 2000);
+  });
+};
+
 function exportCleanHtml(){
   const clone = document.documentElement.cloneNode(true);
   clone.querySelector('#atlasData').textContent = JSON.stringify(ITEMS);
@@ -4683,6 +4729,10 @@ function exportCleanHtml(){
   if (firstChild && firstChild.tagName === 'DIV' && firstChild.querySelector('button')) firstChild.remove();
   const em = clone.querySelector('#editModal');
   if (em) em.remove();
+  const tb = clone.querySelector('button[title="Наверх"]');
+  if (tb) tb.remove();
+  const tf = clone.querySelector('#thanksFooter');
+  if (tf) tf.remove();
   const blob = new Blob(['<!DOCTYPE html>\n' + clone.outerHTML], {type:'text/html;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -4750,8 +4800,11 @@ function render(k){
     const bd=document.createElement('div');
     bd.className='body';
     const latStr = detectLatitude(it);
-    const latHtml = latStr ? '<div style="font-size:11.5px;color:#34d399;margin-bottom:6px;font-weight:600;">📍 '+latStr+'</div>' : '';
-    bd.innerHTML='<div class="top-meta"><span class="kp-badge'+hc+'">Kp '+it.kp+'</span><span class="date">'+it.date+'</span></div>'+latHtml;
+    const moonStr = getMoonInfo(it.date);
+    const linkHtml = it.link ? ' <a href="'+it.link+'" target="_blank" rel="noopener" title="Открыть пост в Telegram" style="color:#64748b;text-decoration:none;margin-left:5px;font-size:13px;" onmouseover="this.style.color=\'#38bdf8\'" onmouseout="this.style.color=\'#64748b\'">↗</a>' : '';
+    const latHtml = latStr ? '<div style="font-size:11.5px;color:#34d399;margin-bottom:4px;font-weight:600;">📍 '+latStr+'</div>' : '';
+    const moonHtml = moonStr ? '<div style="font-size:11.5px;color:#94a3b8;margin-bottom:6px;">'+moonStr+'</div>' : '';
+    bd.innerHTML='<div class="top-meta"><span class="kp-badge'+hc+'">Kp '+it.kp+'</span><span class="date">'+it.date+linkHtml+'</span></div>'+latHtml+moonHtml;
     const tx=document.createElement('div');
     tx.className='txt';
     tx.textContent=it.text;

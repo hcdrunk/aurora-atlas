@@ -4661,6 +4661,8 @@ function detectLatitude(it) {
   return '';
 }
 
+let editingItem = null;
+
 if (isAdmin) {
   const topH = document.querySelector('.header');
   const bar = document.createElement('div');
@@ -4672,23 +4674,51 @@ if (isAdmin) {
   saveBtn.onclick = exportCleanHtml;
   bar.appendChild(saveBtn);
   topH.insertBefore(bar, topH.firstChild);
+
+  const dlg = document.createElement('div');
+  dlg.id = 'editModal';
+  dlg.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:200;justify-content:center;align-items:center;padding:16px;';
+  dlg.innerHTML = '<div style="background:#181b20;border:1px solid #374151;border-radius:10px;padding:20px;width:100%;max-width:480px;color:#e4e4e7;">' +
+    '<h3 style="margin:0 0 12px;color:#34d399;font-size:17px;">Редактирование карточки</h3>' +
+    '<label style="display:block;font-size:12px;color:#9ca3af;margin-bottom:4px;">Широта / локация (оставь пустым, чтобы убрать):</label>' +
+    '<input id="edLat" type="text" style="width:100%;box-sizing:border-box;background:#0f1115;border:1px solid #374151;color:#34d399;font-weight:600;padding:8px 10px;border-radius:6px;margin-bottom:12px;font-size:13px;">' +
+    '<label style="display:block;font-size:12px;color:#9ca3af;margin-bottom:4px;">Описание поста:</label>' +
+    '<textarea id="edTxt" rows="7" style="width:100%;box-sizing:border-box;background:#0f1115;border:1px solid #374151;color:#e4e4e7;padding:8px 10px;border-radius:6px;margin-bottom:14px;font-size:13px;font-family:inherit;line-height:1.4;"></textarea>' +
+    '<div style="display:flex;justify-content:flex-end;gap:8px;">' +
+    '<button id="edCancel" class="btn">Отмена</button>' +
+    '<button id="edSave" class="btn" style="background:#059669;color:#fff;border-color:#10b981;">Сохранить</button>' +
+    '</div></div>';
+  document.body.appendChild(dlg);
+  document.getElementById('edCancel').onclick = () => { dlg.style.display = 'none'; };
+  document.getElementById('edSave').onclick = () => {
+    if (editingItem) {
+      editingItem.customLat = document.getElementById('edLat').value.trim();
+      editingItem.text = document.getElementById('edTxt').value;
+      dlg.style.display = 'none';
+      render(currentFilter);
+    }
+  };
+}
+
+function openEditor(it) {
+  editingItem = it;
+  document.getElementById('edLat').value = detectLatitude(it);
+  document.getElementById('edTxt').value = it.text || '';
+  document.getElementById('editModal').style.display = 'flex';
 }
 
 const groups = [{key:'all',label:'Все'},{key:'low',label:'Kp 0–2'},{key:'3',label:'Kp 3'},{key:'4',label:'Kp 4'},{key:'5',label:'Kp 5'},{key:'6',label:'Kp 6'},{key:'7',label:'Kp 7+'}];
 function matchGroup(it,k){if(k==='all')return true;if(k==='low')return it.kp<2.5;if(k==='7')return it.kp>=6.5;return Math.round(it.kp)===parseInt(k);}
 function setSort(m){sortMode=m;render(currentFilter);}
 function removeItem(id){ITEMS=ITEMS.filter(x=>x.id!==id);render(currentFilter);}
-function editLat(it){
-  const cur = detectLatitude(it);
-  const val = prompt('Укажи широту/место (или очисти поле, чтобы убрать метку):', cur);
-  if (val !== null) { it.customLat = val.trim(); render(currentFilter); }
-}
 
 function exportCleanHtml(){
   const clone = document.documentElement.cloneNode(true);
   clone.querySelector('#atlasData').textContent = JSON.stringify(ITEMS);
   const firstChild = clone.querySelector('.header').firstChild;
   if (firstChild && firstChild.tagName === 'DIV' && firstChild.querySelector('button')) firstChild.remove();
+  const em = clone.querySelector('#editModal');
+  if (em) em.remove();
   const blob = new Blob(['<!DOCTYPE html>\n' + clone.outerHTML], {type:'text/html;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -4730,9 +4760,9 @@ function render(k){
     card.style.position='relative';
     if(isAdmin){
       const eb=document.createElement('button');
-      eb.textContent='✏️ Широта';
-      eb.style.cssText='position:absolute;top:8px;left:8px;background:#0284c7;color:#fff;border:none;border-radius:6px;padding:5px 9px;font-weight:700;font-size:12px;cursor:pointer;z-index:10;';
-      eb.onclick=()=>editLat(it);
+      eb.textContent='✏️ Правка';
+      eb.style.cssText='position:absolute;top:8px;left:8px;background:#0284c7;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-weight:700;font-size:12px;cursor:pointer;z-index:10;';
+      eb.onclick=()=>openEditor(it);
       card.appendChild(eb);
       const db=document.createElement('button');
       db.textContent='✕ Удалить';
@@ -4761,3 +4791,4 @@ function render(k){
 render('all');
 </script>
 </body></html>
+

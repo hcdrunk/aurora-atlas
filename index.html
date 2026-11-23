@@ -5230,4 +5230,207 @@ render('all');
   window.render(currentFilter || 'all');
 })();
 </script>
+<link rel="stylesheet" href="https://cloudflare.com" />
+<script src="https://cloudflare.com" onerror="var s=document.createElement('script');s.src='https://jsdelivr.net;"></script>
+
+<style>
+#spot-map-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(7, 9, 13, 0.92);
+  backdrop-filter: blur(10px);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.sm-box {
+  width: 100%;
+  max-width: 1100px;
+  height: 82vh;
+  background: #141821;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+}
+.sm-head {
+  padding: 12px 18px;
+  background: #181c26;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+#aurora-leaflet-map {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 450px;
+  background: #0b0d11;
+}
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: #181c26 !important;
+  color: #f3f4f6 !important;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 10px !important;
+}
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  font-family: inherit;
+}
+</style>
+
+<div id="spot-map-modal">
+  <div class="sm-box">
+    <div class="sm-head">
+      <div style="font-weight:700;color:#34d399;font-size:15px;">🗺 Карта наблюдений сияний (@AuroraSaintP)</div>
+      <button id="sm-close" class="btn" style="padding:5px 12px;border-color:#ef4444;color:#fca5a5;">✕ Закрыть</button>
+    </div>
+    <div id="aurora-leaflet-map"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const topBar = document.querySelector('.top-bar');
+  if (!topBar) return;
+
+  const mapBtn = document.createElement('button');
+  mapBtn.className = 'btn';
+  mapBtn.textContent = '🗺 Карта спотов';
+  mapBtn.style.cssText = 'border-color: #34d399; color: #34d399; margin-left: 8px;';
+  topBar.appendChild(mapBtn);
+
+  const modal = document.getElementById('spot-map-modal');
+  document.getElementById('sm-close').onclick = () => modal.style.display = 'none';
+  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+  const COORDS = {
+    'оз. Волоярви': [60.32, 30.86],
+    'Шепелёвский маяк': [59.98, 29.13],
+    'Кронштадт': [60.00, 29.76],
+    'Приозерск': [61.03, 30.12],
+    'Пятиречье': [60.52, 30.53],
+    'Лемболово': [60.39, 30.30],
+    'Коккорево': [60.05, 31.07],
+    'Ириновка': [60.08, 30.88],
+    'Токсово / Кавголово': [60.16, 30.53],
+    'Сосново': [60.55, 30.22],
+    'Выборг': [60.71, 28.74],
+    'Сестрорецк': [60.09, 29.96],
+    'Зеленогорск': [60.20, 29.70],
+    'Гатчина': [59.56, 30.12],
+    'Луга': [58.73, 29.84],
+    'Кириши': [59.45, 32.01],
+    'Тихвин': [59.64, 33.52],
+    'Сортавала': [61.70, 30.69],
+    'Петрозаводск': [61.78, 34.35],
+    'Мурманск': [68.97, 33.07],
+    'Териберка': [69.16, 35.14],
+    'Ленобласть': [60.15, 30.40],
+    'Новгородская обл.': [58.52, 31.27],
+    'Псковская обл.': [57.81, 28.33],
+    'Карелия': [62.20, 33.50],
+    'Вологодская обл.': [59.22, 39.89],
+    'Архангельская обл.': [64.54, 40.54],
+    'Костромская обл.': [57.76, 40.92],
+    'Тверская обл.': [56.85, 35.91],
+    'Ярославская обл.': [57.62, 39.89],
+    'Московская обл.': [55.75, 37.61]
+  };
+
+  let mapInstance = null;
+
+  function initMap() {
+    if (typeof L === 'undefined') {
+      alert('Библиотека карты не загрузилась (проверьте интернет)');
+      return;
+    }
+    if (mapInstance) {
+      setTimeout(() => mapInstance.invalidateSize(), 150);
+      return;
+    }
+
+    mapInstance = L.map('aurora-leaflet-map').setView([60.25, 30.35], 7);
+    L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      maxZoom: 18
+    }).addTo(mapInstance);
+
+    const spots = {};
+    ITEMS.forEach(it => {
+      const latStr = detectLatitude(it) || '';
+      const openIdx = latStr.indexOf('(');
+      const closeIdx = latStr.indexOf(')');
+      if (openIdx === -1 || closeIdx === -1) return;
+      const name = latStr.slice(openIdx + 1, closeIdx).trim();
+      if (!name) return;
+
+      if (!spots[name]) {
+        spots[name] = { name, count: 0, minKp: 99, maxKp: 0, samplePhoto: it.photo, latStr };
+      }
+      spots[name].count++;
+      if (it.kp < spots[name].minKp) spots[name].minKp = it.kp;
+      if (it.kp > spots[name].maxKp) spots[name].maxKp = it.kp;
+      if (it.photo) spots[name].samplePhoto = it.photo;
+    });
+
+    Object.values(spots).forEach((sp, idx) => {
+      let coords = COORDS[sp.name];
+      if (!coords) {
+        const parsedLat = parseFloat(sp.latStr.replace(/[^0-9.]/g, ''));
+        const lat = !isNaN(parsedLat) ? parsedLat : 60.1;
+        const lng = 30.2 + ((idx % 7) - 3) * 0.25;
+        coords = [lat, lng];
+      }
+
+      const radius = Math.min(22, Math.max(7, 5 + Math.sqrt(sp.count) * 2.3));
+      const marker = L.circleMarker(coords, {
+        radius: radius,
+        fillColor: '#10b981',
+        color: '#34d399',
+        weight: 2,
+        opacity: 0.95,
+        fillOpacity: 0.55
+      }).addTo(mapInstance);
+
+      const safeName = sp.name.replace(/'/g, "\\'");
+      const popupHtml = `
+        <div style="min-width:190px;">
+          <div style="font-weight:700;font-size:14px;color:#34d399;margin-bottom:4px;">📍 ${sp.name}</div>
+          <div style="font-size:12px;color:#cbd5e1;margin-bottom:6px;">
+            Наблюдений: <b>${sp.count}</b><br>
+            Индекс Kp: <b>${sp.minKp} – ${sp.maxKp}</b>
+          </div>
+          ${sp.samplePhoto ? `<img src="${sp.samplePhoto}" style="width:100%;height:95px;object-fit:cover;border-radius:6px;margin-bottom:8px;">` : ''}
+          <button onclick="filterByMapSpot('${safeName}')" style="width:100%;background:#10b981;color:#052e16;border:none;border-radius:6px;padding:6px;font-weight:700;font-size:12px;cursor:pointer;">
+            Показать все фото (${sp.count})
+          </button>
+        </div>
+      `;
+      marker.bindPopup(popupHtml);
+    });
+
+    setTimeout(() => mapInstance.invalidateSize(), 200);
+  }
+
+  window.filterByMapSpot = function(spotName) {
+    modal.style.display = 'none';
+    const sel = document.querySelector('#filters select');
+    if (sel) {
+      sel.value = spotName;
+      sel.dispatchEvent(new Event('change'));
+    }
+  };
+
+  mapBtn.onclick = () => {
+    modal.style.display = 'flex';
+    initMap();
+  };
+})();
+</script>
 </body></html>

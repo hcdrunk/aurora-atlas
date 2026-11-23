@@ -45,6 +45,34 @@ body {
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
+.top-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.top-bar h1 {
+  margin-right: auto;
+}
+@media (max-width: 768px) {
+  .header {
+    position: static !important;
+  }
+  .top-bar h1 {
+    width: 100%;
+    font-size: 16px !important;
+    margin-bottom: 2px;
+  }
+  .search-input {
+    flex: 1;
+    width: auto !important;
+    min-width: 140px;
+  }
+  .top-bar .btn {
+    margin-left: 0 !important;
+    white-space: nowrap;
+  }
+}
 .search-input:focus {
   border-color: #34d399;
   box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15);
